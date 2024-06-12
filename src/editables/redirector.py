@@ -36,7 +36,7 @@ class RedirectingFinder(importlib.abc.MetaPathFinder):
             if f == cls:
                 break
         else:
-            sys.meta_path.append(cls)
+            sys.meta_path.insert(0, cls)
 
     @classmethod
     def invalidate_caches(cls) -> None:

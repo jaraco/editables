@@ -162,7 +162,6 @@ def test_subpackage_pth(tmp_path, project):
         assert Path(a.b.foo.__file__) == project / "foo/__init__.py"
 
 
-@__import__('pytest').mark.xfail(reason="#37")
 def test_syspath_precedence(tmp_path, project):
     """
     If an editable is ahead on sys.path, it should take precedence.
@@ -182,6 +181,7 @@ def test_syspath_precedence(tmp_path, project):
         assert Path(foo.__file__) == project / "foo/__init__.py"
 
 
+@pytest.mark.xfail(reason="Unsupported (#37)")
 def test_syspath_deference(tmp_path, project):
     """
     If an editable is behind on sys.path, it should defer to the other.
