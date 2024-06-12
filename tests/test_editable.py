@@ -160,3 +160,42 @@ def test_subpackage_pth(tmp_path, project):
         import a.b.foo
 
         assert Path(a.b.foo.__file__) == project / "foo/__init__.py"
+
+
+@__import__('pytest').mark.xfail(reason="#37")
+def test_syspath_precedence(tmp_path, project):
+    """
+    If an editable is ahead on sys.path, it should take precedence.
+    """
+    p = EditableProject(PROJECT_NAME, project)
+    p.map("foo", "foo")
+    site_packages = tmp_path / "site-packages"
+    build_project(site_packages, dict(p.files()))
+    other_packages = tmp_path / "other-packages"
+    build_project(other_packages, {"foo": {"__init__.py": ""}})
+    with import_state(extra_site=site_packages):
+        sys.path.append(str(other_packages))
+        site.addsitedir(other_packages)
+
+        import foo
+
+        assert Path(foo.__file__) == project / "foo/__init__.py"
+
+
+def test_syspath_deference(tmp_path, project):
+    """
+    If an editable is behind on sys.path, it should defer to the other.
+    """
+    p = EditableProject(PROJECT_NAME, project)
+    p.map("foo", "foo")
+    site_packages = tmp_path / "site-packages"
+    build_project(site_packages, dict(p.files()))
+    other_packages = tmp_path / "other-packages"
+    build_project(other_packages, {"foo": {"__init__.py": ""}})
+    with import_state(extra_site=site_packages):
+        sys.path.insert(0, str(other_packages))
+        site.addsitedir(other_packages)
+
+        import foo
+
+        assert Path(foo.__file__) == other_packages / "foo/__init__.py"
